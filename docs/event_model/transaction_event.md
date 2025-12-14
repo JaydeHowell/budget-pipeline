@@ -3,7 +3,9 @@
 
 * **Schema:** TransactionEvent
 * **Version:** 1
-* **Status:** DRAFT
+* **Status:** FROZEN
+* **Freeze Policy:** No changes to v1; new fields require v2
+* **Freeze Commit:** <git sha>
 
 ## Purpose
 A `TransactionEvent` will represent a single, immutable financial transaction emitted by an ingestion source and consumed by the deterministic C++ pipeline. Once persisted, the `TransactionEvent` must **NOT** be modified.
@@ -111,6 +113,7 @@ These elements all belong in downstream changes
 | Version | Date       | Notes              |
 |---------|------------|--------------------|
 | 1       | 2025-12-14 | Initial MVP schema |
+
 
 
 
