@@ -48,10 +48,10 @@ Events may arrive out of order.
 | `event_id`           | UUID                | Yes      | Globally unique, immutable                                                    |
 | `schema_version`     | int32               | Yes      | must equal `1` for this schema                                                |
 | `source`             | enum                | Yes      | See Enumerations                                                              |
-| `ingested_at`        | UTC timestamp       | Yes      | System-generated                                                              |
-| `batch_id`           | UUID                | No       | If present, all events with matching `batch_id` were ingested in the same run |
 | `source_connector` | string | No | Identifies ingestion adapter/version (i.e. `BOFA_DEBIT_CSV_V1`)                                    |
 | `source_institution` | string              | No       | If present, stable identifier for institution (normalized slug)               |
+| `ingested_at`        | UTC timestamp       | Yes      | System-generated                                                              |
+| `batch_id`           | UUID                | No       | If present, all events with matching `batch_id` were ingested in the same run |
 | `source_file_hash`   | fixed-length string | No       | Deterministic hash of raw source file bytes                                   |
 
 ### Enumerations
@@ -71,6 +71,7 @@ To preserve deterministic replay:
 * No implicit defaults
 * No mutable containers
 * No locale-dependent parsing or formatting
+
 All validation must occur at event construction time
 
 ## Versioning
@@ -109,4 +110,5 @@ These elements all belong in downstream changes
 | Version | Date       | Notes              |
 |---------|------------|--------------------|
 | 1       | 2025-12-14 | Initial MVP schema |
+
 
