@@ -1,0 +1,112 @@
+# TransactionEvent Schema (v1)
+**Last updated:** 12/14/2025
+
+* **Schema:** TransactionEvent
+* **Version:** 1
+* **Status:** DRAFT
+
+## Purpose
+A `TransactionEvent` will represent a single, immutable financial transaction emitted by an ingestion source and consumed by the deterministic C++ pipeline. Once persisted, the `TransactionEvent` must **NOT** be modified.
+Any corrections must be expressed as new events.
+
+## Semantics
+### Event Semantics
+* **Event Type:** Fact / Observation
+* **Mutability:** Immutable
+* **Cardinality:** One event per transaction
+* **Ordering:** No global ordering guarantee
+* **Replayable:** Yes (timing event driven)
+
+### Time Semantics
+`occurred_at`
+> When the transaction occurred in the real world
+
+`ingested_at`
+> When the system observed and accepted the event
+
+Replay ordering is defined as:
+1. `occured_at` ascending
+2. `event_id` ascending (tie-breaker)
+
+Events may arrive out of order.
+
+
+## Field Definitions
+### Domain Payload
+| Field                     | Type            | Required | Invariants                                 |
+|---------------------------|-----------------|----------|--------------------------------------------|
+| `account_id`              | UUID            | Yes      | Logical account identifier                 |
+| `external_transaction_id` | string          | No       | Provider-specific ID                       |
+| `amount_minor`            | int64           | Yes      | Signed; negative = debit                   |
+| `precision`               | int32           | Yes      | Must match `currency` minor unit precision |
+| `currency`                | ISO-4217 String | Yes      | Uppercase                                  |
+| `raw_description`         | string          | No       | Unparsed merchant text                     |
+| `occurred_at`             | UTC timestamp   | Yes      | Must be <= `ingested_at`                   |
+### Log Metadata
+| Field              | Type                | Required | Invariants                                                                    |
+|--------------------|---------------------|----------|-------------------------------------------------------------------------------|
+| `event_id`         | UUID                | Yes      | Globally unique, immutable                                                    |
+| `schema_version`   | int32               | Yes      | must equal `1` for this schema                                                |
+| `source`           | enum                | Yes      | See Enumerations                                                              |
+| `ingested_at`      | UTC timestamp       | Yes      | System-generated                                                              |
+| `batch_id`         | UUID                | No       | If present, all events with matching `batch_id` were ingested in the same run |
+| `source_file_hash` | fixed-length string | No       | Deterministic hash of raw source file bytes                                   |
+
+### Enumerations
+`source`
+| Value        | Definition                        |
+|--------------|-----------------------------------|
+| `AMEX`       | American Express CSV              |
+| `CHASE`      | Chase CSV                         |
+| `BOFACREDIT` | Bank of America Credit CSV        |
+| `BOFADEBIT`  | Bank of America Debit CSV         |
+| `ALLY`       | Ally CSV                          |
+| `BECU`       | Boeing Employees Credit Union CSV |
+| `MANUAL`     | User entered                      |
+Enumeration values are stable and should not be renamed across schema versions. Unknown sources must be rejected at ingestion.
+
+## Determinism Constraints
+To preserve deterministic replay:
+* No derived fields
+* No environment-dependent variables
+* No implicit defaults
+* No mutable containers
+* No locale-dependent parsing or formatting
+All validation must occur at event construction time
+
+## Versioning
+* `schema_version` is mandatory
+* v1 events must remain replayable forever
+* New fields require:
+  * New schema version
+  * Explicit migration strategy
+* Fields must not change meaning across versions
+
+## Storage Mapping
+Each `TransactionEvent` maps to one row in the `transaction_events` table
+* Append-only
+* Primary key: `event_id`
+* Indexed on `(account_id, occurred_at)`
+
+## Language Binding
+### C++
+* Implemented as an immutable `struct`
+* Constructor enforces invariants
+* No setters
+* No pointers in the event struct; value types only
+### Python
+* Thin Data Transfer Object (DTO) mirroring schema
+* No validation beyond basic type checking
+
+## Explicit Non-Goals
+* Categorization
+* Merchant normalization
+* Deduplication heuristics
+* Currency conversion
+* Aggregation
+These elements all belong in downstream changes
+
+## Changelog
+| Version | Date       | Notes              |
+|---------|------------|--------------------|
+| 1       | 2025-12-14 | Initial MVP schema |
