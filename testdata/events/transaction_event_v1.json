@@ -1,0 +1,18 @@
+{
+  "event_id": "b3a1d4f4-2c4f-4d4a-9c3b-9d1a6c77e1b0",
+  "schema_version": 1,
+  "source": "BANK_CSV",
+  "source_institution": "BOFA",
+  "source_connector": "BOFA_DEBIT_CSV_V1",
+  "ingested_at": "2025-12-14T18:42:31Z",
+  "batch_id": "8b6d8a6c-94a1-4b25-9f42-52a40e9f94b2",
+  "source_file_hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+
+  "account_id": "c9a646b3-5e8a-44a2-9b39-ecf2f8c8c9a4",
+  "external_transaction_id": "20251201-ABC123",
+  "amount_minor": -4523,
+  "precision": 2,
+  "currency": "USD",
+  "raw_description": "SAFEWAY STORE #1234",
+  "occurred_at": "2025-12-01T10:15:00Z"
+}
