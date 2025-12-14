@@ -43,26 +43,25 @@ Events may arrive out of order.
 | `raw_description`         | string          | No       | Unparsed merchant text                     |
 | `occurred_at`             | UTC timestamp   | Yes      | Must be <= `ingested_at`                   |
 ### Log Metadata
-| Field              | Type                | Required | Invariants                                                                    |
-|--------------------|---------------------|----------|-------------------------------------------------------------------------------|
-| `event_id`         | UUID                | Yes      | Globally unique, immutable                                                    |
-| `schema_version`   | int32               | Yes      | must equal `1` for this schema                                                |
-| `source`           | enum                | Yes      | See Enumerations                                                              |
-| `ingested_at`      | UTC timestamp       | Yes      | System-generated                                                              |
-| `batch_id`         | UUID                | No       | If present, all events with matching `batch_id` were ingested in the same run |
-| `source_file_hash` | fixed-length string | No       | Deterministic hash of raw source file bytes                                   |
+| Field                | Type                | Required | Invariants                                                                    |
+|----------------------|---------------------|----------|-------------------------------------------------------------------------------|
+| `event_id`           | UUID                | Yes      | Globally unique, immutable                                                    |
+| `schema_version`     | int32               | Yes      | must equal `1` for this schema                                                |
+| `source`             | enum                | Yes      | See Enumerations                                                              |
+| `ingested_at`        | UTC timestamp       | Yes      | System-generated                                                              |
+| `batch_id`           | UUID                | No       | If present, all events with matching `batch_id` were ingested in the same run |
+| `source_connector` | string | No | Identifies ingestion adapter/version (i.e. `BOFA_DEBIT_CSV_V1`)                                    |
+| `source_institution` | string              | No       | If present, stable identifier for institution (normalized slug)               |
+| `source_file_hash`   | fixed-length string | No       | Deterministic hash of raw source file bytes                                   |
 
 ### Enumerations
 `source`
-| Value        | Definition                        |
-|--------------|-----------------------------------|
-| `AMEX`       | American Express CSV              |
-| `CHASE`      | Chase CSV                         |
-| `BOFACREDIT` | Bank of America Credit CSV        |
-| `BOFADEBIT`  | Bank of America Debit CSV         |
-| `ALLY`       | Ally CSV                          |
-| `BECU`       | Boeing Employees Credit Union CSV |
-| `MANUAL`     | User entered                      |
+| Value          | Definition                |
+|----------------|---------------------------|
+| `BANK_CSV`     | Entered via CSV from bank |
+| `BANK_API`     | Entered via bank API      |
+| `MANUAL_ENTRY` | User entered              |
+
 Enumeration values are stable and should not be renamed across schema versions. Unknown sources must be rejected at ingestion.
 
 ## Determinism Constraints
@@ -110,3 +109,4 @@ These elements all belong in downstream changes
 | Version | Date       | Notes              |
 |---------|------------|--------------------|
 | 1       | 2025-12-14 | Initial MVP schema |
+
