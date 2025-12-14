@@ -15,7 +15,8 @@ Any corrections must be expressed as new events.
 * **Mutability:** Immutable
 * **Cardinality:** One event per transaction
 * **Ordering:** No global ordering guarantee
-* **Replayable:** Yes (timing event driven)
+* **Replayable:** Yes (event-time driven)
+* **Truth Model:** Represents the source-reported transaction as observed, not an interpreted or normalized record
 
 ### Time Semantics
 `occurred_at`
@@ -25,7 +26,7 @@ Any corrections must be expressed as new events.
 > When the system observed and accepted the event
 
 Replay ordering is defined as:
-1. `occured_at` ascending
+1. `occurred_at` ascending
 2. `event_id` ascending (tie-breaker)
 
 Events may arrive out of order.
@@ -47,22 +48,22 @@ Events may arrive out of order.
 |----------------------|---------------------|----------|-------------------------------------------------------------------------------|
 | `event_id`           | UUID                | Yes      | Globally unique, immutable                                                    |
 | `schema_version`     | int32               | Yes      | must equal `1` for this schema                                                |
-| `source`             | enum                | Yes      | See Enumerations                                                              |
-| `source_connector` | string | No | Identifies ingestion adapter/version (i.e. `BOFA_DEBIT_CSV_V1`)                                    |
+| `source_type         | enum                | Yes      | See Enumerations                                                              |
+| `source_connector`   | string              | No       | Identifies ingestion adapter/version (i.e. `BOFA_DEBIT_CSV_V1`)               |
 | `source_institution` | string              | No       | If present, stable identifier for institution (normalized slug)               |
 | `ingested_at`        | UTC timestamp       | Yes      | System-generated                                                              |
 | `batch_id`           | UUID                | No       | If present, all events with matching `batch_id` were ingested in the same run |
 | `source_file_hash`   | fixed-length string | No       | Deterministic hash of raw source file bytes                                   |
 
 ### Enumerations
-`source`
+`source_type`
 | Value          | Definition                |
 |----------------|---------------------------|
 | `BANK_CSV`     | Entered via CSV from bank |
 | `BANK_API`     | Entered via bank API      |
 | `MANUAL_ENTRY` | User entered              |
 
-Enumeration values are stable and should not be renamed across schema versions. Unknown sources must be rejected at ingestion.
+Enumeration values are stable and must not be renamed across schema versions. Unknown sources must be rejected at ingestion.
 
 ## Determinism Constraints
 To preserve deterministic replay:
@@ -110,5 +111,6 @@ These elements all belong in downstream changes
 | Version | Date       | Notes              |
 |---------|------------|--------------------|
 | 1       | 2025-12-14 | Initial MVP schema |
+
 
 
