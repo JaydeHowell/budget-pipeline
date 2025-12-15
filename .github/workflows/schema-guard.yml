@@ -46,13 +46,19 @@ jobs:
           echo "$SCHEMA_CHANGED"
 
           # edits forbidden to frozen files (add for future frozen files)
-          FORBIDDEN=$(echo "$SCHEMA_CHANGED" | grep -E '/v1\.md$' || true)
-          if [[ -n "$FORBIDDEN" ]]; then
-            echo "::error::Edits to frozen schema version(s) are not allowed:"
-            echo "$FORBIDDEN"
-            echo "Create a new version file instead. Refer to schema documentation and .github/pull_request_template.md"
-            exit 1
-          fi
+          while read -r f; do 
+              [[ -z "$f" ]] && continue
+              if grep -q -E '^\s*(\*\s*)?(\*\*Status:\*\*|Status:)\s*FROZEN\s*$' "$f"; then
+                FORBIDDEN+="$f"$'\n'
+              fi
+            done <<< "$SCHEMA_CHANGED"
+
+            if [[ -n "$FORBIDDEN" ]]; then
+                echo "::error::Edits to frozen schema version(s) are not allowed:"
+                echo "$FORBIDDEN"
+                echo "Create a new version file instead. Refer to schema documentation and .github/pull_request_template.md"
+                exit 1
+              fi
 
           # require a new golden fixture if 
           FIXTURE_CHANGED=$(git diff --name-only "$BASE" "$HEAD" -- 'testdata/events/**' || true)
@@ -68,18 +74,18 @@ jobs:
             error "add a new version file in this PR (docs/event_model/<schema>/<version_number>.md)"
           fi
 
+          # require new version file(s) to contain a changelog table if new version exists
           if [[ -n $NEW_VERSION ]]; then
+            while read -r f; do 
+              [[ -z "$f" ]] && continue
+              if ! grep -q -E '^##\s+Changelog\s*$' "$f"; then
+                error "New schema version file '$f' is missing a '## Changelog' section"
+              fi
             echo "New schema version file(s) added:"
             echo "$NEW_VERSION"
+          
+            done <<< "$NEW_VERSION"
           fi
-
-          # require new version file(s) to contain a changelog table
-          while read -r f; do 
-            [[ -z "$f" ]] && continue
-            if ! grep -q -E '^##\s+Changelog\s*$' "$f"; then
-              error "New schema version file '$f' is missing a '## Changelog' section"
-            fi
-          done <<< "$NEW_VERSION"
 
           if [[ $fail -ne 0 ]]; then
             exit 1
