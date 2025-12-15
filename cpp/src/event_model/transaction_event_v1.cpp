@@ -48,4 +48,19 @@ namespace event_model {
             throw std::invalid_argument("precision must be non-negative");
         }
     }
+    const Uuid& TransactionEventV1::account_id() const noexcept {
+        return account_id_;
+    }
+    std::int64_t TransactionEventV1::amount_minor() const noexcept {
+        return amount_minor_;
+    }
+    const std::array<char, 3>& TransactionEventV1::currency() const noexcept {
+        return currency_;
+    }
+    Timestamp TransactionEventV1::occurred_at() const noexcept {
+        return occurred_at_;
+    }
+    Timestamp TransactionEventV1::ingested_at() const noexcept {
+        return ingested_at_;
+    }
 }
