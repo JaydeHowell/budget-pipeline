@@ -38,17 +38,17 @@ namespace event_model {
             std::optional<std::array<char, 64> > source_file_hash_hex // SHA-256 hex
     );
 
-    const Uuid &account_id() const noexcept;
+    [[nodiscard]] const Uuid &account_id() const noexcept;
 
-    std::int64_t amount_minor() const noexcept;
+    [[nodiscard]] std::int64_t amount_minor() const noexcept;
 
     const std::array<char, 3> &currency() const noexcept;
 
-    Timestamp occurred_at() const noexcept;
+    [[nodiscard]] Timestamp occurred_at() const noexcept;
 
-    Timestamp ingested_at() const noexcept;
+    [[nodiscard]] Timestamp ingested_at() const noexcept;
 
-    SourceType source() const noexcept;
+    [[nodiscard]] SourceType source() const noexcept;
 
     private
     :
