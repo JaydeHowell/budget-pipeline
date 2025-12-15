@@ -1,0 +1,79 @@
+name: schema-guard
+
+on:
+  pull_request:
+    paths:
+      - "docs/event_model/**"
+
+jobs:
+  enforce_schema_policy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: enforce schema versioning and changelog policy
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE="${{ github.event.pull_request.base.sha }}"
+          HEAD="${{ github.event.pull_request.head.sha }}"
+
+          echo "Checking schema changes from $BASE to $HEAD"
+
+          CHANGED=$(git diff --name-only "$BASE" "$HEAD" -- 'docs/event_model/**' || true)
+          if [[ -z "$CHANGED" ]]; then
+            echo "No schema changes detected."
+            exit 0
+          fi
+
+          SCHEMA_CHANGED=$(echo "$CHANGED" | grep -E '/v[0-9]+(\.[0-9]+)?\.md$' || true)
+          if [[ -z "$SCHEMA_CHANGED" ]]; then
+            echo "No schema version files changed (docs-only change)."
+            exit 0
+          fi
+          
+          echo "Changed schema version files:"
+          echo "$SCHEMA_CHANGED"
+
+          FIXTURE_CHANGED=$(git diff --name-only "$BASE" "$HEAD" -- 'testdata/events/**' || true)
+          if [[ -z "$FIXTURE_CHANGED" ]]; then
+            echo "::error::Schema changed but no golden fixture was added/updated under testdata/events/."
+            exit 1
+          fi
+
+
+          # edits forbidden to frozen files (add for future frozen files)
+          FORBIDDEN=$(echo "$SCHEMA_CHANGED" | grep -E '/v1\.md$' || true)
+          if [[ -n "$FORBIDDEN" ]]; then
+            echo "::error::Edits to frozen schema version(s) are not allowed:"
+            echo "$FORBIDDEN"
+            echo "Create a new version file instead. Refer to schema documentation and .github/pull_request_template.md"
+            exit 1
+          fi
+
+          # require at least one new schema version file if schema is touched
+          ADDED=$(git diff --name-status "$BASE" "$HEAD" -- 'docs/event_model/**' | awk '$1=="A"{print $2}' || true)
+          NEW_VERSION=$(echo "$ADDED" | grep -E '/v[0-9]+(\.[0-9]+)?\.md$' || true)
+          if [[ -z "$NEW_VERSION" ]]; then
+            echo "::error::Schema files were modified but no new schema version file was added"
+            echo "add a new version file in this PR (docs/event_model/<schema>/<version_number>.md)"
+            exit 1
+          fi
+
+          echo "New schema version file(s) added:"
+          echo "$NEW_VERSION"
+
+          # require new version file(s) to contain a changelog table
+          while read -r f; do 
+            [[ -z "$f" ]] && continue
+            if ! grep -q -E '^##\s+Changelog\s*$' "$f"; then
+              echo "::error::New schema version file '$f' is missing a '## Changelog' section"
+              exit 1
+            fi
+          done <<< "$NEW_VERSION"
+
+          echo "schema guard checks passed"
+          
