@@ -63,4 +63,7 @@ namespace event_model {
     Timestamp TransactionEventV1::ingested_at() const noexcept {
         return ingested_at_;
     }
+    SourceType TransactionEventV1::source() const noexcept {
+        return source_;
+    }
 }

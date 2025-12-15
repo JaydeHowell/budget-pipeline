@@ -38,7 +38,7 @@ namespace event_model {
             std::optional<std::array<char, 64> > source_file_hash_hex // SHA-256 hex
     );
 
-    [[nodiscard]] const Uuid &account_id() const noexcept;
+    [[nodiscard]] const Uuid& account_id() const noexcept;
 
     [[nodiscard]] std::int64_t amount_minor() const noexcept;
 
