@@ -1,73 +1,61 @@
-#Load JSON
-
-#Validate required fields, types, and invariants from the schema
-#expected JSON/Python runtime type (e.g., str, int)
-#conversion target (e.g., UUID object, datetime object)
-#invariants/range constraints
-
-#Normalize only what the contract requires (e.g., ensure currency is uppercase, ensure hash length)
-
-#Produce a TransactionEventV1DTO object (or dict) that is guaranteed valid
+#Produce a TransactionEventV1DTO object (or dict) that is guaranteed well-formed
 
 import json
 import sys
 
 file_path = 'data.json'
 
-required_fields = {
-    'account_id': str,
-    'amount_minor': int,
-    'precision': int,
-    'currency': str,
-    'occurred_at': str,
-    'event_id': str,
-    'schema_version': int,
-    'source': str,
-    'ingested_at': str
-}
+# list of spec tuples as the source of truth in deterministic order matching the V1 schema (field, expected_type, required)
 
-optional_fields = {
-    'external_transaction_id': str,
-    'raw_description': str,
-    'source_connector': str,
-    'source_institution': str,
-    'batch_id': str,
-    'source_file_hash': str
-}
-
-optional_variables = {}
+validation_fields = [
+    # Domain Payload
+    ('account_id', str, True),
+    ('external_transaction_id', str, False),
+    ('amount_minor', int, True),
+    ('precision', int, True),
+    ('currency', str, True),
+    ('raw_description', str, False),
+    ('occurred_at', str, True),
+    # Log Metadata
+    ('event_id', str, True),
+    ('schema_version', int, True),
+    ('source', str, True),
+    ('source_connector', str, False),
+    ('source_institution', str, False),
+    ('ingested_at', str, True),
+    ('batch_id', str, False),
+    ('source_file_hash', str, False)
+]
 
 try:
     with open(file_path, 'r') as file:
         data = json.load(file)
 
-    if isinstance(data, dict):
+    if not isinstance(data, dict):
         raise ValueError(f"{type(data)} is not in hash/dictionary format.")
 
     error_list = []
     event_payload = {}
 
-    for key, value in required_fields.items():
-        if key not in data:
-            error_list.append(key + ": required field missing")
-            continue
-        elif data[key] is None:
-            error_list.append(key + ": required field is null")
-        elif value is int and isinstance(data[key], bool):
-            error_list.append(key + ": invalid value type")
-        elif not isinstance(data[key], value):
-            error_list.append(key + ": invalid value type")
+    for name, expected_type, required in validation_fields:
+        if required:
+            if name not in data:
+                error_list.append(name + ": required field missing")
+                continue
+            elif data[name] is None:
+                error_list.append(name + ": required field is null")
+                continue
         else:
-            event_payload[key] = data[key]
-    for key, value in optional_fields.items():
-        if key not in data or data[key] is None:
-            event_payload[key] = None
-        elif value is int and isinstance(data[key], bool):
-            error_list.append(key + ": invalid value type")
-        elif not isinstance(data[key], value):
-            error_list.append(key + ": invalid value type")
+            if name not in data or data[name] is None:
+                event_payload[name] = None
+                continue
+        # boolean masquerading as int check
+        if expected_type is int and isinstance(data[name], bool):
+            error_list.append(name + ": invalid value type")
+        elif not isinstance(data[name], expected_type):
+            error_list.append(name + ": invalid value type")
         else:
-            event_payload[key] = data[key]
+            event_payload[name] = data[name]
 
     # initial error check to stop execution if any fields are missing or wrong type at runtime
     if error_list:
