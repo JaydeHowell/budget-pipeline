@@ -37,29 +37,36 @@ try:
     error_list = []
     event_payload = {}
 
-    for name, expected_type, required in validation_fields:
+    for field, expected_type, required in validation_fields:
         if required:
-            if name not in data:
-                error_list.append(name + ": required field missing")
+            if field not in data:
+                error_list.append(field + ": required field missing")
                 continue
-            elif data[name] is None:
-                error_list.append(name + ": required field is null")
+            elif data[field] is None:
+                error_list.append(field + ": required field is null")
                 continue
         else:
-            if name not in data or data[name] is None:
-                event_payload[name] = None
+            if field not in data or data[field] is None:
+                event_payload[field] = None
                 continue
         # boolean masquerading as int check
-        if expected_type is int and isinstance(data[name], bool):
-            error_list.append(name + ": invalid value type")
-        elif not isinstance(data[name], expected_type):
-            error_list.append(name + ": invalid value type")
+        if expected_type is int and isinstance(data[field], bool):
+            error_list.append(field + ": invalid value type")
+        elif not isinstance(data[field], expected_type):
+            error_list.append(field + ": invalid value type")
         else:
-            event_payload[name] = data[name]
+            event_payload[field] = data[field]
 
     # initial error check to stop execution if any fields are missing or wrong type at runtime
     if error_list:
         raise ValueError(f"Schema Validation Failed\n{'\n'.join(error_list)}")
+
+    ordered_arguments = []
+
+    for field, expected_type, required in validation_fields:
+        ordered_arguments.append(event_payload[field])
+
+
 
 
 except FileNotFoundError:
