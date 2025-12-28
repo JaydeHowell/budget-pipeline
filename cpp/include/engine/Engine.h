@@ -27,6 +27,8 @@ namespace pipeline {
         std::int64_t sum_amount_minor_ = 0;
         std::uint64_t duplicate_event_count_ = 0;
 
-        std::unordered_set<std::string> seen_event_ids_;
+        std::unordered_set<
+            event_model::Uuid,
+            event_model::UuidHash> seen_event_ids_;
     };
 }

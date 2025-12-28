@@ -10,6 +10,17 @@ namespace event_model {
     using Timestamp = std::chrono::sys_time<std::chrono::nanoseconds>;
     using Uuid = std::array<std::uint8_t, 16>;
 
+    struct UuidHash {
+        std::size_t operator()(const Uuid& key) const noexcept {
+            std::size_t hash = 1469598103934665603ull;
+            for (std::uint8_t byte : key) {
+                hash ^= static_cast<std::size_t>(byte);
+                hash *= 1099511628211ull;
+            }
+            return hash;
+        }
+    };
+
     enum class SourceType : std::uint8_t {
         BankCsv,
         BankApi,
@@ -47,6 +58,8 @@ namespace event_model {
     [[nodiscard]] Timestamp occurred_at() const noexcept;
 
     [[nodiscard]] Timestamp ingested_at() const noexcept;
+
+    [[nodiscard]] const Uuid& event_id() const noexcept;
 
     [[nodiscard]] SourceType source() const noexcept;
 
