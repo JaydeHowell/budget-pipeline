@@ -11,6 +11,11 @@ namespace pipeline {
     public:
         Engine() = default;
 
+        Engine(const Engine&) = delete;
+        Engine& operator=(const Engine&) = delete;
+        Engine(Engine&&) noexcept = default;
+        Engine& operator=(Engine&&) noexcept = default;
+
         void ingest(const event_model::TransactionEventV1& event);
         void ingest_batch(const std::vector<event_model::TransactionEventV1>& events);
 
@@ -20,7 +25,7 @@ namespace pipeline {
             std::uint64_t duplicate_event_count = 0;
         };
 
-        Snapshot snapshot() const noexcept;
+        [[nodiscard]] Snapshot snapshot() const noexcept;
 
     private:
         std::uint64_t event_count_ = 0;
