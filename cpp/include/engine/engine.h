@@ -7,9 +7,9 @@
 #include "transaction_event_v1.h"
 
 namespace pipeline {
-    class engine final {
+    class Engine final {
     public:
-        engine() = default;
+        Engine() = default;
 
         void ingest(const event_model::TransactionEventV1& event);
         void ingest_batch(const std::vector<event_model::TransactionEventV1>& events);
