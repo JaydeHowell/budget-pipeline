@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <cstdint>
-#include "transaction_event_v1.h"
+#include "event_model/transaction_event_v1.h"
 
 namespace pipeline {
     class Engine final {
